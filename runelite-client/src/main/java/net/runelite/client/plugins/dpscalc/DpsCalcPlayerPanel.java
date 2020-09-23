@@ -343,14 +343,17 @@ public class DpsCalcPlayerPanel extends JPanel {
 		importGearTab.setOnSelectEvent(() -> {
 			if (client.getLocalPlayer() != null) {
 				Item[] equippedGear = client.getItemContainer(InventoryID.EQUIPMENT).getItems();
-				for (int k = 0; k < equippedGear.length; k++) {
-					if (equipmentSlotData.containsKey(k)) {
-						for (EquipmentSlotItem item : equipmentSlotData.get(k).getEquipmentSlotItems()) {
-							if (item.getId() == equippedGear[k].getId()) {
-								player.getCurrentSet().put(k, item);
+				for (EquipmentSlot slot: EquipmentSlot.values()) {
+					int slotID = slot.getSlot().getSlotIdx();
+					if (slotID > equippedGear.length || equippedGear[slotID].getId() > -1) {
+						for (EquipmentSlotItem item : equipmentSlotData.get(slotID).getEquipmentSlotItems()) {
+							if (item.getId() == equippedGear[slotID].getId()) {
+								player.getCurrentSet().put(slotID, item);
 								break;
 							}
 						}
+					} else {
+						player.getCurrentSet().remove(slotID);
 					}
 				}
 				setAllEquipmentSlots(player.getCurrentSet());
