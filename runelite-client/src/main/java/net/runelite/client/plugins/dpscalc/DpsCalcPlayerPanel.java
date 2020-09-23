@@ -108,7 +108,6 @@ public class DpsCalcPlayerPanel extends JPanel {
 					strengthLevel.setValue(client.getRealSkillLevel(Skill.STRENGTH));
 					magicLevel.setValue(client.getRealSkillLevel(Skill.MAGIC));
 					rangeLevel.setValue(client.getRealSkillLevel(Skill.RANGED));
-					JOptionPane.showMessageDialog(null, "Stats imported.", "Import Stats", JOptionPane.INFORMATION_MESSAGE);
 				} else {
 					JOptionPane.showMessageDialog(null, "You must be logged in for this to work.", "Import Stats", JOptionPane.WARNING_MESSAGE);
 				}
@@ -134,14 +133,7 @@ public class DpsCalcPlayerPanel extends JPanel {
 			public void actionPerformed(ActionEvent e) {
 				player.setSelectedSetName((String) equipmentSetsPanel.getSelectedItem());
 				player.setCurrentSet(new HashMap<>(player.getSelectedSet()));
-				for (EquipmentSlot slot: EquipmentSlot.values()) {
-					try {
-						setEquipmentSlot(new ImageIcon(itemManager.getImage(player.getSelectedSet().get(slot.getSlot().getSlotIdx()).getId())),
-								slot, player.getSelectedSet().get(slot.getSlot().getSlotIdx()));
-					} catch (Exception ex) {
-						clearEquipmentSlot(slot);
-					}
-				}
+				setAllEquipmentSlots(player.getSelectedSet());
 			}
 		});
 
@@ -271,7 +263,6 @@ public class DpsCalcPlayerPanel extends JPanel {
 		constraints.gridy++;
 	}
 
-
 	private void addEquipmentSlots()
 	{
 		// delete set
@@ -280,26 +271,18 @@ public class DpsCalcPlayerPanel extends JPanel {
 		deleteSetTab.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseReleased(MouseEvent e) {
-				int idx = equipmentSetsPanel.getSelectedIndex();
 				String setName = (String) equipmentSetsPanel.getSelectedItem();
 				int result = JOptionPane.showConfirmDialog(null, "Delete " + setName + "?",
 						"Delete Set", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 				if (result == JOptionPane.YES_OPTION) {
 					if (!player.getSelectedSetName().toLowerCase().equals("new")) {
+						int idx = equipmentSetsPanel.getSelectedIndex();
 						player.getEquipmentSets().remove(player.getSelectedSetName());
 						player.setSelectedSetName("New");
-						player.setCurrentSet(new HashMap<>(player.getSelectedSet()));
+						player.setCurrentSet(player.getSelectedSet());
 						equipmentSetsPanel.setSelectedIndex(0);
 						equipmentSetsPanel.removeItemAt(idx);
-						for (EquipmentSlot slot : EquipmentSlot.values()) {
-							try {
-								setEquipmentSlot(new ImageIcon(itemManager.getImage(player.getSelectedSet().get(slot.getSlot().getSlotIdx()).getId())),
-										slot, player.getSelectedSet().get(slot.getSlot().getSlotIdx()));
-							} catch (Exception ex) {
-								clearEquipmentSlot(slot);
-							}
-						}
-						JOptionPane.showMessageDialog(null, setName + " deleted.", "Delete Set", JOptionPane.INFORMATION_MESSAGE);
+						setAllEquipmentSlots(player.getSelectedSet());
 					} else {
 						JOptionPane.showMessageDialog(null, "This set cannot be deleted.", "Delete Set", JOptionPane.INFORMATION_MESSAGE);
 					}
@@ -308,7 +291,9 @@ public class DpsCalcPlayerPanel extends JPanel {
 		});
 		equipmentSlotTabGroup.addTab(deleteSetTab);
 		// helmet
-		equipmentTabs.put(0, addTabComponent(EquipmentSlot.HEAD, new ImageIcon(ImageUtil.getResourceStreamFromClass(getClass(), EquipmentSlot.HEAD.getImageFile())), this.equipmentSlotTabGroup));
+		equipmentTabs.put(0, addTabComponent(EquipmentSlot.HEAD,
+				new ImageIcon(ImageUtil.getResourceStreamFromClass(getClass(), EquipmentSlot.HEAD.getImageFile())),
+				this.equipmentSlotTabGroup));
 		// save set
 		MaterialTab saveSetTab = new MaterialTab("<html>" + "Save Set" + "</html>", equipmentSlotTabGroup, null);
 		saveSetTab.setToolTipText("<html>" + "Click to save your current gear setup.<br>Enter the same name to override a setup." + "</html>");
@@ -329,47 +314,59 @@ public class DpsCalcPlayerPanel extends JPanel {
 		});
 		equipmentSlotTabGroup.addTab(saveSetTab);
 		// cape
-		equipmentTabs.put(1, addTabComponent(EquipmentSlot.CAPE, new ImageIcon(ImageUtil.getResourceStreamFromClass(getClass(), EquipmentSlot.CAPE.getImageFile())), this.equipmentSlotTabGroup));
+		equipmentTabs.put(1, addTabComponent(EquipmentSlot.CAPE,
+				new ImageIcon(ImageUtil.getResourceStreamFromClass(getClass(), EquipmentSlot.CAPE.getImageFile())),
+				this.equipmentSlotTabGroup));
 		// amulet
-		equipmentTabs.put(2, addTabComponent(EquipmentSlot.AMULET, new ImageIcon(ImageUtil.getResourceStreamFromClass(getClass(), EquipmentSlot.AMULET.getImageFile())), this.equipmentSlotTabGroup));
+		equipmentTabs.put(2, addTabComponent(EquipmentSlot.AMULET,
+				new ImageIcon(ImageUtil.getResourceStreamFromClass(getClass(), EquipmentSlot.AMULET.getImageFile())),
+				this.equipmentSlotTabGroup));
 		// ammo
-		equipmentTabs.put(13, addTabComponent(EquipmentSlot.AMMO, new ImageIcon(ImageUtil.getResourceStreamFromClass(getClass(), EquipmentSlot.AMMO.getImageFile())), this.equipmentSlotTabGroup));
+		equipmentTabs.put(13, addTabComponent(EquipmentSlot.AMMO,
+				new ImageIcon(ImageUtil.getResourceStreamFromClass(getClass(), EquipmentSlot.AMMO.getImageFile())),
+				this.equipmentSlotTabGroup));
 		// weapon
-		equipmentTabs.put(3, addTabComponent(EquipmentSlot.WEAPON, new ImageIcon(ImageUtil.getResourceStreamFromClass(getClass(), EquipmentSlot.WEAPON.getImageFile())), this.equipmentSlotTabGroup));
+		equipmentTabs.put(3, addTabComponent(EquipmentSlot.WEAPON,
+				new ImageIcon(ImageUtil.getResourceStreamFromClass(getClass(), EquipmentSlot.WEAPON.getImageFile())),
+				this.equipmentSlotTabGroup));
 		// body
-		equipmentTabs.put(4, addTabComponent(EquipmentSlot.BODY, new ImageIcon(ImageUtil.getResourceStreamFromClass(getClass(), EquipmentSlot.BODY.getImageFile())), this.equipmentSlotTabGroup));
+		equipmentTabs.put(4, addTabComponent(EquipmentSlot.BODY,
+				new ImageIcon(ImageUtil.getResourceStreamFromClass(getClass(), EquipmentSlot.BODY.getImageFile())),
+				this.equipmentSlotTabGroup));
 		// shield
-		equipmentTabs.put(5, addTabComponent(EquipmentSlot.SHIELD, new ImageIcon(ImageUtil.getResourceStreamFromClass(getClass(), EquipmentSlot.SHIELD.getImageFile())), this.equipmentSlotTabGroup));
+		equipmentTabs.put(5, addTabComponent(EquipmentSlot.SHIELD,
+				new ImageIcon(ImageUtil.getResourceStreamFromClass(getClass(), EquipmentSlot.SHIELD.getImageFile())),
+				this.equipmentSlotTabGroup));
 		// pull gear
-		MaterialTab currentGearTab = new MaterialTab("<html>" + "Import Gear" + "</html>", equipmentSlotTabGroup, null);
-		currentGearTab.setToolTipText("Click to use your character's equipped gear");
-		currentGearTab.setOnSelectEvent(() -> {
+		MaterialTab importGearTab = new MaterialTab("<html>" + "Import Gear" + "</html>", equipmentSlotTabGroup, null);
+		importGearTab.setToolTipText("Click to use your character's equipped gear");
+		importGearTab.setOnSelectEvent(() -> {
 			if (client.getLocalPlayer() != null) {
 				Item[] equippedGear = client.getItemContainer(InventoryID.EQUIPMENT).getItems();
-				for (EquipmentSlot slot : EquipmentSlot.values()) {
-					if (slot.getSlot().getSlotIdx() < equippedGear.length && equippedGear[slot.getSlot().getSlotIdx()].getId() > -1) {
-						for (EquipmentSlotItem item : equipmentSlotData.get(slot.getSlot().getSlotIdx()).getEquipmentSlotItems()) {
-							if (item.getId() == equippedGear[slot.getSlot().getSlotIdx()].getId()) {
-								setEquipmentSlot(new ImageIcon(itemManager.getImage(equippedGear[slot.getSlot().getSlotIdx()].getId())), slot, item);
+				for (int k = 0; k < equippedGear.length; k++) {
+					if (equipmentSlotData.containsKey(k)) {
+						for (EquipmentSlotItem item : equipmentSlotData.get(k).getEquipmentSlotItems()) {
+							if (item.getId() == equippedGear[k].getId()) {
+								player.getCurrentSet().put(k, item);
 								break;
 							}
 						}
-					} else {
-						clearEquipmentSlot(slot);
 					}
 				}
-				JOptionPane.showMessageDialog(null, "Gear imported.", "Import Gear", JOptionPane.INFORMATION_MESSAGE);
+				setAllEquipmentSlots(player.getCurrentSet());
 			} else {
 				JOptionPane.showMessageDialog(null, "You must be logged in for this to work.", "Import Gear", JOptionPane.WARNING_MESSAGE);
 			}
 			return true;
 		});
-		equipmentSlotTabGroup.addTab(currentGearTab);
+		equipmentSlotTabGroup.addTab(importGearTab);
 		// legs
-		equipmentTabs.put(7, addTabComponent(EquipmentSlot.LEGS, new ImageIcon(ImageUtil.getResourceStreamFromClass(getClass(), EquipmentSlot.LEGS.getImageFile())), this.equipmentSlotTabGroup));
+		equipmentTabs.put(7, addTabComponent(EquipmentSlot.LEGS,
+				new ImageIcon(ImageUtil.getResourceStreamFromClass(getClass(), EquipmentSlot.LEGS.getImageFile())),
+				this.equipmentSlotTabGroup));
 		// attack bonuses
-		MaterialTab hoverTab = new MaterialTab("<html>" + "Attack Bonuses" + "</html>", equipmentSlotTabGroup, null);
-		hoverTab.addMouseListener(new MouseAdapter()
+		MaterialTab attackBonusTab = new MaterialTab("<html>" + "Attack Bonuses" + "</html>", equipmentSlotTabGroup, null);
+		attackBonusTab.addMouseListener(new MouseAdapter()
 		{
 			@Override
 			public void mouseEntered(MouseEvent e) {
@@ -383,32 +380,33 @@ public class DpsCalcPlayerPanel extends JPanel {
 						"Magic Damage: " + player.getTotalBonuses().getMagic_damage() + "<br>" +
 						"Ranged Strength: " + player.getTotalBonuses().getRanged_strength() +
 						"</html>";
-				hoverTab.setToolTipText(tooltip);
+				attackBonusTab.setToolTipText(tooltip);
 			}
 
 			@Override
 			public void mousePressed(MouseEvent e) {
-				hoverTab.unselect();
+				attackBonusTab.unselect();
 			}
 
 			@Override
 			public void mouseReleased(MouseEvent e) {
-				hoverTab.unselect();
+				attackBonusTab.unselect();
 			}
 		});
-		equipmentSlotTabGroup.addTab(hoverTab);
+		equipmentSlotTabGroup.addTab(attackBonusTab);
 		// gloves
-		equipmentTabs.put(9, addTabComponent(EquipmentSlot.GLOVES, new ImageIcon(ImageUtil.getResourceStreamFromClass(getClass(), EquipmentSlot.GLOVES.getImageFile())), this.equipmentSlotTabGroup));
+		equipmentTabs.put(9, addTabComponent(EquipmentSlot.GLOVES,
+				new ImageIcon(ImageUtil.getResourceStreamFromClass(getClass(), EquipmentSlot.GLOVES.getImageFile())),
+				this.equipmentSlotTabGroup));
 		// boots
-		equipmentTabs.put(10, addTabComponent(EquipmentSlot.BOOTS, new ImageIcon(ImageUtil.getResourceStreamFromClass(getClass(), EquipmentSlot.BOOTS.getImageFile())), this.equipmentSlotTabGroup));
+		equipmentTabs.put(10, addTabComponent(EquipmentSlot.BOOTS,
+				new ImageIcon(ImageUtil.getResourceStreamFromClass(getClass(), EquipmentSlot.BOOTS.getImageFile())),
+				this.equipmentSlotTabGroup));
 		//  ring
-		equipmentTabs.put(12, addTabComponent(EquipmentSlot.RING, new ImageIcon(ImageUtil.getResourceStreamFromClass(getClass(), EquipmentSlot.RING.getImageFile())), this.equipmentSlotTabGroup));
-		for (EquipmentSlot slot: EquipmentSlot.values()) {
-			if (player.getCurrentSet().containsKey(slot.getSlot().getSlotIdx())) {
-				setEquipmentSlot(new ImageIcon(itemManager.getImage(player.getCurrentSet().get(slot.getSlot().getSlotIdx()).getId())),
-						slot, player.getCurrentSet().get(slot.getSlot().getSlotIdx()));
-			}
-		}
+		equipmentTabs.put(12, addTabComponent(EquipmentSlot.RING,
+				new ImageIcon(ImageUtil.getResourceStreamFromClass(getClass(), EquipmentSlot.RING.getImageFile())),
+				this.equipmentSlotTabGroup));
+		setAllEquipmentSlots(player.getCurrentSet());
 	}
 
 	private void renderItems(EquipmentSlot slot) {
@@ -452,10 +450,10 @@ public class DpsCalcPlayerPanel extends JPanel {
 			for (String entry : unarmed) {
 				combatStance.addItem(entry);
 			}
+			player.setCombatStanceIndex(0);
+			combatStance.setSelectedIndex(0);
 		}
 		player.getCurrentSet().remove(slotID);
-		player.setCombatStanceIndex(0);
-		combatStance.setSelectedIndex(0);
 	}
 
 	void setEquipmentSlot(ImageIcon icon, EquipmentSlot slot, EquipmentSlotItem equipmentSlotItem) {
@@ -468,9 +466,20 @@ public class DpsCalcPlayerPanel extends JPanel {
 				combatStance.addItem(entry.getCombat_style() + "/" + entry.getAttack_type() + "/" + entry.getAttack_style());
 				player.getCombatStance().add(entry.getCombat_style() + "/" + entry.getAttack_type() + "/" + entry.getAttack_style());
 			}
+			combatStance.setSelectedIndex(player.getCombatStanceIndex());
 		}
 		player.getCurrentSet().put(slotID, equipmentSlotItem);
-		combatStance.setSelectedIndex(player.getCombatStanceIndex());
+	}
+
+	private void setAllEquipmentSlots(HashMap<Integer, EquipmentSlotItem> set) {
+		for (EquipmentSlot slot : EquipmentSlot.values()) {
+			try {
+				ImageIcon icon = new ImageIcon(itemManager.getImage(set.get(slot.getSlot().getSlotIdx()).getId()));
+				setEquipmentSlot(icon, slot, set.get(slot.getSlot().getSlotIdx()));
+			} catch (Exception ex) {
+				clearEquipmentSlot(slot);
+			}
+		}
 	}
 
 	void setPlayerStats() {

@@ -158,8 +158,6 @@ public class DpsCalcPlugin extends Plugin {
 			int spellMaxHit = player.getSpellDamage();
 			maxHit = (int) (spellMaxHit * (1 + stats.getMagic_damage() / 100.0));
 		}
-		log.debug(String.valueOf(maxHit));
-		log.debug(String.valueOf(target.getKalphite()));
 		maxHit = (int) (maxHit * target.getSalve()[num] * target.getSlayerBonus()[num] * target.getDemon() * target.getDragon() *
 				player.inquisitor() * twistedBow()[0] * player.tomeOfFire() * target.getKalphite());
 		maxRoll = C * (D + 64);
@@ -178,11 +176,11 @@ public class DpsCalcPlugin extends Plugin {
 		} else {
 			results[0] = String.valueOf((int) maxHit);
 		}
-		log.debug(String.format("%.3f", accuracy));
 		timeToKill = target.getHpLevel() / dps;
 		results[1] = String.format("%.3f", accuracy * 100);
 		results[2] = String.format("%.3f", dps);
 		results[3] = String.format("%.3f", timeToKill);
+
 		return results;
 	}
 
