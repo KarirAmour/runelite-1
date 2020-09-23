@@ -281,15 +281,21 @@ public class Player implements Serializable {
 	}
 
 	int attackSpeed() {
-		int attackSpeed = 4;
-		if (currentSet.containsKey(3)) {
-			if (spellIndex > 0 && spellIndex < 42 && !currentSet.get(3).getName().toLowerCase().contains("harmonised")) {
-				attackSpeed = 5;
+		try {
+			if (spellIndex > 0 && spellIndex < 42) {
+				if (currentSet.get(3).getName().toLowerCase().contains("harmonised")) {
+					return 4;
+				} else {
+					return 5;
+				}
 			} else if (attackType()[0].toLowerCase().contains("rapid")) {
-				attackSpeed = currentSet.get(3).getWeapon().getAttack_speed() - 1;
+				return currentSet.get(3).getWeapon().getAttack_speed() - 1;
+			} else {
+				return currentSet.get(3).getWeapon().getAttack_speed();
 			}
+		} catch (Exception e) {
+			return 4;
 		}
-		return attackSpeed;
 	}
 
 	boolean scythe() {
